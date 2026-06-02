@@ -1,0 +1,6 @@
+[submodule "cutlass"]
+	path = cutlass
+	url = https://github.com/NVIDIA/cutlass.git
+[submodule "tests/googletest"]
+	path = tests/googletest
+	url = https://github.com/google/googletest

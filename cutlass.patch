@@ -1,0 +1,22 @@
+diff --git a/include/cutlass/pipeline/sm90_pipeline.hpp b/include/cutlass/pipeline/sm90_pipeline.hpp
+index aae17d98..46f0747c 100644
+--- a/include/cutlass/pipeline/sm90_pipeline.hpp
++++ b/include/cutlass/pipeline/sm90_pipeline.hpp
+@@ -491,7 +491,7 @@ public:
+     consumer_release(state.index());
+   }
+ 
+-private:
++public:
+   uint32_t dst_blockid_ = 0;
+   uint32_t is_signaling_thread_ = 0;
+   FullBarrier *full_barrier_ptr_ = nullptr;
+@@ -915,7 +915,7 @@ public:
+     consumer_release(state.index());
+   }
+ 
+-private:
++public:
+   FullBarrier *full_barrier_ptr_ = nullptr;
+   EmptyBarrier *empty_barrier_ptr_ = nullptr;
+   Params params_;
