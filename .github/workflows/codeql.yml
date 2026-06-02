@@ -45,7 +45,7 @@ jobs:
         include:
         - name: cuda
           language: c-cpp
-          category: cpp
+          category: c-cpp
           build-mode: manual
         # CodeQL supports the following values keywords for 'language': 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
@@ -98,7 +98,8 @@ jobs:
       if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        make -C src/cuda codeql NVCC=$(which nvcc) -j$(nproc)
+        NVCC_PATH="$(command -v nvcc)"
+        make -C src/cuda codeql NVCC="$NVCC_PATH" -j$(nproc)
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
