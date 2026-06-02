@@ -97,7 +97,7 @@ jobs:
       if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        NVCC_PATH="$(command -v nvcc)" || { echo "Error: nvcc not found in PATH"; exit 1; }
+        NVCC_PATH="$(command -v nvcc)" || { echo "Error: nvcc not found in PATH. Ensure the CUDA toolkit was installed successfully."; exit 1; }
         MAKE_JOBS="$(nproc)"
         # Use SPLIT_COMPILE=7 to leave one core available for system tasks on the 8-core runner.
         make -C src/cuda codeql NVCC="$NVCC_PATH" SPLIT_COMPILE=7 -j"$MAKE_JOBS"
