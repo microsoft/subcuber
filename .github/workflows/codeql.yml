@@ -47,8 +47,8 @@ jobs:
           language: c-cpp
           category: cpp
           build-mode: manual
-        - language: python
-          name: python
+        - name: python
+          language: python
           category: python
           build-mode: none
         # CodeQL supports the following values keywords for 'language': 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
