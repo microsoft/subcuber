@@ -97,9 +97,9 @@ jobs:
       if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        NVCC_PATH="$(command -v nvcc)"
+        NVCC_PATH="$(command -v nvcc)" || { echo "Error: nvcc not found in PATH"; exit 1; }
         MAKE_JOBS="$(nproc)"
-        # Use the requested split compile setting for the larger runner.
+        # Use the requested split compile setting for the 8-core runner.
         make -C src/cuda codeql NVCC="$NVCC_PATH" SPLIT_COMPILE=7 -j"$MAKE_JOBS"
 
     - name: Perform CodeQL Analysis
