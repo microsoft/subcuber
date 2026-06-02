@@ -101,6 +101,7 @@ jobs:
         test -n "$NVCC_PATH" || { echo "Error: nvcc not found in PATH"; exit 1; }
         test -x "$NVCC_PATH" || { echo "Error: nvcc is not executable"; exit 1; }
         MAKE_JOBS="$(nproc)"
+        # Use the requested split compile setting for the larger runner.
         make -C src/cuda codeql NVCC="$NVCC_PATH" SPLIT_COMPILE=7 -j"$MAKE_JOBS"
 
     - name: Perform CodeQL Analysis
