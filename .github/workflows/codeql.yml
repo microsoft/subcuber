@@ -45,6 +45,7 @@ jobs:
         include:
         - name: cuda
           language: c-cpp
+          # CUDA is analyzed through the C/C++ extractor, which requires traced compilation commands.
           build-mode: manual
         # CodeQL supports the following values keywords for 'language': 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
@@ -97,7 +98,7 @@ jobs:
       if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        NVCC_PATH="$(command -v nvcc)" || { echo "Error: nvcc not found in PATH. Ensure the CUDA toolkit was installed successfully."; exit 1; }
+        NVCC_PATH="$(command -v nvcc)" || { echo "Error: nvcc not found in PATH. Ensure the 'Install CUDA toolkit' step succeeded."; exit 1; }
         MAKE_JOBS="$(nproc)"
         # Use SPLIT_COMPILE=7 to leave one core available for system tasks on the 8-core runner.
         make -C src/cuda codeql NVCC="$NVCC_PATH" SPLIT_COMPILE=7 -j"$MAKE_JOBS"
