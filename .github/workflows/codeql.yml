@@ -109,6 +109,7 @@ jobs:
       run: |
         NVCC_PATH="$(command -v nvcc)" || { echo "Error: nvcc not found in PATH. Ensure the 'Install CUDA toolkit' step succeeded."; exit 1; }
         MAKE_JOBS="$(nproc)"
+        git apply --directory cutlass/ cutlass.patch 
         # Use SPLIT_COMPILE=7 to leave one core available for system tasks on the 8-core runner.
         make -C src/cuda codeql BUILD="LITE" NVCC="$NVCC_PATH" SPLIT_COMPILE=7 -j"$MAKE_JOBS"
 
