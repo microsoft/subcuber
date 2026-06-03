@@ -53,7 +53,7 @@ jobs:
       matrix:
         include:
         - name: cuda
-          language: cuda
+          language: cpp
           # CUDA is analyzed through the C/C++ extractor, which requires traced compilation commands.
           build-mode: manual
         # CodeQL supports the following values keywords for 'language': 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
@@ -116,4 +116,4 @@ jobs:
       uses: github/codeql-action/analyze@v4
       with:
         # Use a fixed SARIF category for this advanced C/C++ analysis; CUDA is analyzed as C/C++.
-        category: "/language:cuda"
+        category: "/language:cpp"
