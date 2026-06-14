@@ -174,6 +174,8 @@ We are actively working on optimizing our implementation and supporting larger c
 
 1. Add Cooperative Strassen GeMM Kernels for H100/H200: Currently, we only support Pingpong kernels because on our H200 system this kernel runs fastest on most cases. However, on H100, Cooperative kernels are fastest. We will soon support Cooperative Strassen GeMM Kernels.
 
-2. Add GeMM kernels for B200.
+2. Add tensor core based FP64 kernels for Ampere and Hopper.
 
-3. Overhaul Level 2 schedules to support larger Strassen family of algorithms.
+3. Add GeMM kernels for Blackwell.
+
+4. Overhaul Level 2 schedules to support larger Strassen family of algorithms.
