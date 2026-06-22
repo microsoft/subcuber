@@ -89,7 +89,7 @@ The runner requires the GEMM problem size, data type, GPU architecture, Strassen
 Supported values:
 
 ```text
---dtype=f32|f16
+--dtype=f32|f16|fp64
 --gpu_arch=volta|ampere|hopper
 --strassen_level=0|1|2|all
 ```
@@ -174,8 +174,6 @@ We are actively working on optimizing our implementation and supporting larger c
 
 1. Add Cooperative Strassen GeMM Kernels for H100/H200: Currently, we only support Pingpong kernels because on our H200 system this kernel runs fastest on most cases. However, on H100, Cooperative kernels are fastest. We will soon support Cooperative Strassen GeMM Kernels.
 
-2. Add tensor core based FP64 kernels for Ampere and Hopper.
+2. Add GeMM kernels for Blackwell.
 
-3. Add GeMM kernels for Blackwell.
-
-4. Overhaul Level 2 schedules to support larger Strassen family of algorithms.
+3. Overhaul Level 2 schedules to support larger Strassen family of algorithms.
