@@ -33,8 +33,10 @@ using KernelRunFn = int (*)(KernelRunnerBuffers, int, int, int, int, int,
 
 DECLARE_KERNEL_RUN_FN(run_cublas_f32);
 DECLARE_KERNEL_RUN_FN(run_cublas_f16);
+DECLARE_KERNEL_RUN_FN(run_cublas_f64);
 DECLARE_KERNEL_RUN_FN(run_cublaslt_f32);
 DECLARE_KERNEL_RUN_FN(run_cublaslt_f16);
+DECLARE_KERNEL_RUN_FN(run_cublaslt_f64);
 
 #ifndef STRASSEN_DISABLE_CUDA_DECLARATIONS
 DECLARE_KERNEL_RUN_FN(run_ampere_f32_sw_tile);
@@ -43,9 +45,16 @@ DECLARE_KERNEL_RUN_FN(run_ampere_f32_sw_interleaved_presum);
 DECLARE_KERNEL_RUN_FN(run_ampere_f32_sw_interleaved_presum_128x128);
 DECLARE_KERNEL_RUN_FN(run_ampere_f32_sw_interleaved_presum_level_2);
 DECLARE_KERNEL_RUN_FN(run_ampere_f32_sw_interleaved_presum_level_2_128x128);
+DECLARE_KERNEL_RUN_FN(run_ampere_f64_sw_interleaved_presum_64x64);
+DECLARE_KERNEL_RUN_FN(run_ampere_f64_sw_interleaved_presum_128x128);
+DECLARE_KERNEL_RUN_FN(run_ampere_f64_sw_interleaved_presum_level_2_64x64);
+DECLARE_KERNEL_RUN_FN(run_ampere_f64_sw_interleaved_presum_level_2_128x128);
+DECLARE_KERNEL_RUN_FN(run_ampere_f64_sw_fused_presum_128x128);
 DECLARE_KERNEL_RUN_FN(run_ampere_f32_sw_kernel_presum);
 DECLARE_KERNEL_RUN_FN(run_ampere_f32_sw_fused_presum);
 DECLARE_KERNEL_RUN_FN(run_ampere_f16_cutlass_128x256);
+DECLARE_KERNEL_RUN_FN(run_ampere_f64_cutlass_64x64);
+DECLARE_KERNEL_RUN_FN(run_ampere_f64_cutlass_128x128);
 DECLARE_KERNEL_RUN_FN(run_ampere_f32_cutlass_128x128);
 DECLARE_KERNEL_RUN_FN(run_ampere_f32_cutlass_256x128);
 DECLARE_KERNEL_RUN_FN(run_ampere_f16_sw_interleaved_presum_max_fusion);
@@ -55,10 +64,17 @@ DECLARE_KERNEL_RUN_FN(run_ampere_f16_sw_kernel_presum);
 DECLARE_KERNEL_RUN_FN(run_hopper_f32_sw_tile);
 DECLARE_KERNEL_RUN_FN(run_hopper_f32_sw_interleaved_presum);
 DECLARE_KERNEL_RUN_FN(run_hopper_f32_sw_interleaved_presum_level_2);
+DECLARE_KERNEL_RUN_FN(run_hopper_f64_sw_interleaved_presum_128x64);
+DECLARE_KERNEL_RUN_FN(run_hopper_f64_sw_interleaved_presum_128x128);
+DECLARE_KERNEL_RUN_FN(run_hopper_f64_sw_interleaved_presum_level_2_128x64);
+DECLARE_KERNEL_RUN_FN(run_hopper_f64_sw_interleaved_presum_level_2_128x128);
+DECLARE_KERNEL_RUN_FN(run_hopper_f64_sw_fused_presum_128x128);
 DECLARE_KERNEL_RUN_FN(run_hopper_f32_sw_kernel_presum);
 DECLARE_KERNEL_RUN_FN(run_hopper_f32_sw_fused_presum);
 DECLARE_KERNEL_RUN_FN(run_hopper_f16_cutlass_128x128_pingpong);
 DECLARE_KERNEL_RUN_FN(run_hopper_f16_cutlass_128x256_cooperative);
+DECLARE_KERNEL_RUN_FN(run_hopper_f64_cutlass_128x64);
+DECLARE_KERNEL_RUN_FN(run_hopper_f64_cutlass_128x128);
 DECLARE_KERNEL_RUN_FN(run_hopper_f32_cutlass_128x128);
 DECLARE_KERNEL_RUN_FN(run_hopper_f32_cutlass_256x128);
 DECLARE_KERNEL_RUN_FN(run_hopper_f16_sw_interleaved_presum_pingpong_max_fusion_2x128_2x128_opt_no);
@@ -91,22 +107,32 @@ struct KernelEntry {
 static const KernelEntry kKernels[] = {
     {"cublas_f32", "volta", "f32", 0, run_cublas_f32},
     {"cublas_f16", "volta", "f16", 0, run_cublas_f16},
+    {"cublas_f64", "volta", "f64", 0, run_cublas_f64},
   {"cublaslt_f32", "volta", "f32", 0, run_cublaslt_f32},
   {"cublaslt_f16", "volta", "f16", 0, run_cublaslt_f16},
+  {"cublaslt_f64", "volta", "f64", 0, run_cublaslt_f64},
     {"cublas_f32", "ampere", "f32", 0, run_cublas_f32},
     {"cublas_f16", "ampere", "f16", 0, run_cublas_f16},
+    {"cublas_f64", "ampere", "f64", 0, run_cublas_f64},
   {"cublaslt_f32", "ampere", "f32", 0, run_cublaslt_f32},
   {"cublaslt_f16", "ampere", "f16", 0, run_cublaslt_f16},
+  {"cublaslt_f64", "ampere", "f64", 0, run_cublaslt_f64},
   {"cublas_f32", "hopper", "f32", 0, run_cublas_f32},
   {"cublas_f16", "hopper", "f16", 0, run_cublas_f16},
+  {"cublas_f64", "hopper", "f64", 0, run_cublas_f64},
   {"cublaslt_f32", "hopper", "f32", 0, run_cublaslt_f32},
   {"cublaslt_f16", "hopper", "f16", 0, run_cublaslt_f16},
+  {"cublaslt_f64", "hopper", "f64", 0, run_cublaslt_f64},
 #ifndef STRASSEN_DISABLE_CUDA_DECLARATIONS
     {"ampere_f16_cutlass_128x256", "ampere", "f16", 0, run_ampere_f16_cutlass_128x256},
+  {"ampere_f64_cutlass_64x64", "ampere", "f64", 0, run_ampere_f64_cutlass_64x64},
+  {"ampere_f64_cutlass_128x128", "ampere", "f64", 0, run_ampere_f64_cutlass_128x128},
     {"ampere_f32_cutlass_128x128", "ampere", "f32", 0, run_ampere_f32_cutlass_128x128},
     {"ampere_f32_cutlass_256x128", "ampere", "f32", 0, run_ampere_f32_cutlass_256x128},
     {"hopper_f16_cutlass_128x128_pingpong", "hopper", "f16", 0, run_hopper_f16_cutlass_128x128_pingpong},
     {"hopper_f16_cutlass_128x256_cooperative", "hopper", "f16", 0, run_hopper_f16_cutlass_128x256_cooperative},
+    {"hopper_f64_cutlass_128x64", "hopper", "f64", 0, run_hopper_f64_cutlass_128x64},
+    {"hopper_f64_cutlass_128x128", "hopper", "f64", 0, run_hopper_f64_cutlass_128x128},
     {"hopper_f32_cutlass_128x128", "hopper", "f32", 0, run_hopper_f32_cutlass_128x128},
     {"hopper_f32_cutlass_256x128", "hopper", "f32", 0, run_hopper_f32_cutlass_256x128},
     {"ampere_f32_tile_64x128", "ampere", "f32", 1, run_ampere_f32_sw_tile},
@@ -115,6 +141,11 @@ static const KernelEntry kKernels[] = {
     {"ampere_f32_sw_interleaved_presum_128x128", "ampere", "f32", 1, run_ampere_f32_sw_interleaved_presum_128x128},
     {"ampere_f32_sw_interleaved_presum_level_2_128x128", "ampere", "f32", 2, run_ampere_f32_sw_interleaved_presum_level_2_128x128},
     {"ampere_f32_sw_interleaved_presum_level_2_256x128", "ampere", "f32", 2, run_ampere_f32_sw_interleaved_presum_level_2},
+    {"ampere_f64_sw_interleaved_presum_64x64", "ampere", "f64", 1, run_ampere_f64_sw_interleaved_presum_64x64},
+    {"ampere_f64_sw_interleaved_presum_128x128", "ampere", "f64", 1, run_ampere_f64_sw_interleaved_presum_128x128},
+    {"ampere_f64_sw_interleaved_presum_level_2_64x64", "ampere", "f64", 2, run_ampere_f64_sw_interleaved_presum_level_2_64x64},
+    {"ampere_f64_sw_interleaved_presum_level_2_128x128", "ampere", "f64", 2, run_ampere_f64_sw_interleaved_presum_level_2_128x128},
+    {"ampere_f64_sw_fused_presum_128x128", "ampere", "f64", 1, run_ampere_f64_sw_fused_presum_128x128},
     {"ampere_f32_sw_kernel_presum_256x128", "ampere", "f32", 1, run_ampere_f32_sw_kernel_presum},
     {"ampere_f32_sw_fused_presum_256x128", "ampere", "f32", 1, run_ampere_f32_sw_fused_presum},
     {"ampere_f16_sw_interleaved_presum_max_fusion", "ampere", "f16", 1, run_ampere_f16_sw_interleaved_presum_max_fusion},
@@ -123,6 +154,11 @@ static const KernelEntry kKernels[] = {
     {"ampere_f16_sw_kernel_presum", "ampere", "f16", 1, run_ampere_f16_sw_kernel_presum},
     {"hopper_f32_sw_interleaved_presum", "hopper", "f32", 1, run_hopper_f32_sw_interleaved_presum},
     {"hopper_f32_sw_interleaved_presum_level_2", "hopper", "f32", 2, run_hopper_f32_sw_interleaved_presum_level_2},
+    {"hopper_f64_sw_interleaved_presum_128x64", "hopper", "f64", 1, run_hopper_f64_sw_interleaved_presum_128x64},
+    {"hopper_f64_sw_interleaved_presum_128x128", "hopper", "f64", 1, run_hopper_f64_sw_interleaved_presum_128x128},
+    {"hopper_f64_sw_interleaved_presum_level_2_128x64", "hopper", "f64", 2, run_hopper_f64_sw_interleaved_presum_level_2_128x64},
+    {"hopper_f64_sw_interleaved_presum_level_2_128x128", "hopper", "f64", 2, run_hopper_f64_sw_interleaved_presum_level_2_128x128},
+    {"hopper_f64_sw_fused_presum_128x128", "hopper", "f64", 1, run_hopper_f64_sw_fused_presum_128x128},
     {"hopper_f32_sw_tile", "hopper", "f32", 1, run_hopper_f32_sw_tile},
     {"hopper_f32_sw_kernel_presum", "hopper", "f32", 1, run_hopper_f32_sw_kernel_presum},
     {"hopper_f32_sw_fused_presum", "hopper", "f32", 1, run_hopper_f32_sw_fused_presum},
@@ -163,6 +199,7 @@ static std::string normalize_dtype(std::string dtype) {
   dtype = lower(dtype);
   if (dtype == "float" || dtype == "fp32" || dtype == "s") return "f32";
   if (dtype == "half" || dtype == "fp16" || dtype == "h") return "f16";
+  if (dtype == "double" || dtype == "fp64" || dtype == "d") return "f64";
   return dtype;
 }
 
@@ -201,7 +238,7 @@ static bool get_required_string_arg(int argc, char **argv, const char *name, std
 }
 
 static void usage(char const *program) {
-  std::cerr << "Usage: " << program << " --m=<M> --n=<N> --k=<K> --dtype=f32|f16 --gpu_arch=volta|ampere|hopper --strassen_level=0|1|2|all --iterations=N --warmup=N --streams=N [--kernel_regex=REGEX]\n";
+  std::cerr << "Usage: " << program << " --m=<M> --n=<N> --k=<K> --dtype=f32|f16|f64 --gpu_arch=volta|ampere|hopper --strassen_level=0|1|2|all --iterations=N --warmup=N --streams=N [--kernel_regex=REGEX]\n";
 }
 
 static bool tunes_split_k(KernelEntry const &kernel) {
@@ -228,8 +265,8 @@ int run_benchmark(std::vector<KernelEntry> const &candidates, int m, int n, int 
   cutlass::HostTensor<Element, cutlass::layout::RowMajor> tensor_c(problem_size.mn());
   cutlass::HostTensor<Element, cutlass::layout::RowMajor> tensor_d(problem_size.mn());
 
-  int range_end = std::is_same<Element, float>::value ? 16 : 4;
-  int range_start = std::is_same<Element, float>::value ? -16 : -4;
+  int range_end = std::is_same<Element, cutlass::half_t>::value ? 4 : 16;
+  int range_start = std::is_same<Element, cutlass::half_t>::value ? -4 : -16;
   cutlass::reference::host::TensorFillRandomUniform(
       tensor_a.host_view(), 1, Element(range_end), Element(range_start), 2);
   cutlass::reference::host::TensorFillRandomUniform(
@@ -404,7 +441,7 @@ int main(int argc, char **argv) {
   }
 
   if (!valid_args || m <= 0 || n <= 0 || k <= 0 || iterations <= 0 || warmup < 0 ||
-      streams <= 0 || streams > max_streams || (dtype != "f32" && dtype != "f16") ||
+      streams <= 0 || streams > max_streams || (dtype != "f32" && dtype != "f16" && dtype != "f64") ||
       (arch != "volta" && arch != "ampere" && arch != "hopper") ||
       (!all_strassen_levels && strassen_level != 0 && strassen_level != 1 && strassen_level != 2)) {
     usage(argv[0]);
@@ -433,6 +470,10 @@ int main(int argc, char **argv) {
   if (dtype == "f32") {
     return run_benchmark<float>(candidates, m, n, k, dtype, arch, strassen_level_label,
                                 iterations, warmup, streams);
+  }
+  if (dtype == "f64") {
+    return run_benchmark<double>(candidates, m, n, k, dtype, arch, strassen_level_label,
+                                 iterations, warmup, streams);
   }
   return run_benchmark<cutlass::half_t>(candidates, m, n, k, dtype, arch, strassen_level_label,
                                         iterations, warmup, streams);

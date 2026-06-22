@@ -9,6 +9,7 @@ struct CublasType;
 
 template <>
 struct CublasType<float> {
+  using Scale = float;
   static constexpr cudaDataType_t data_type = CUDA_R_32F;
   static constexpr cublasComputeType_t compute_type = CUBLAS_COMPUTE_32F_PEDANTIC;
   static constexpr cublasMath_t math_mode = CUBLAS_DEFAULT_MATH;
@@ -16,7 +17,17 @@ struct CublasType<float> {
 };
 
 template <>
+struct CublasType<double> {
+  using Scale = double;
+  static constexpr cudaDataType_t data_type = CUDA_R_64F;
+  static constexpr cublasComputeType_t compute_type = CUBLAS_COMPUTE_64F_PEDANTIC;
+  static constexpr cublasMath_t math_mode = CUBLAS_DEFAULT_MATH;
+  static constexpr cublasGemmAlgo_t algo = CUBLAS_GEMM_DEFAULT;
+};
+
+template <>
 struct CublasType<cutlass::half_t> {
+  using Scale = float;
   static constexpr cudaDataType_t data_type = CUDA_R_16F;
   static constexpr cublasComputeType_t compute_type = CUBLAS_COMPUTE_32F_FAST_16F;
   static constexpr cublasMath_t math_mode = CUBLAS_TENSOR_OP_MATH;
@@ -63,8 +74,9 @@ int run_cublas_gemm(KernelRunnerBuffers buffers, int m, int n, int k,
     return cublas_status_to_error(cublas_status);
   }
 
-  float alpha = 1.0f;
-  float beta = 0.0f;
+  using Scale = typename Type::Scale;
+  Scale alpha = Scale(1.0);
+  Scale beta = Scale(0.0);
   auto launch = [&]() {
     return cublasGemmEx(handle,
                         CUBLAS_OP_N, CUBLAS_OP_N,
@@ -152,4 +164,12 @@ extern "C" int run_cublas_f16(KernelRunnerBuffers buffers, int m, int n, int k,
                                int split_k_slices, float *avg_ms) {
   return run_cublas_gemm<cutlass::half_t>(buffers, m, n, k, warmup_iterations,
                                           iterations, streams, num_streams, split_k_slices, avg_ms);
+}
+
+extern "C" int run_cublas_f64(KernelRunnerBuffers buffers, int m, int n, int k,
+                               int warmup_iterations, int iterations,
+                               cudaStream_t *streams, int num_streams,
+                               int split_k_slices, float *avg_ms) {
+  return run_cublas_gemm<double>(buffers, m, n, k, warmup_iterations,
+                                 iterations, streams, num_streams, split_k_slices, avg_ms);
 }

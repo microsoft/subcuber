@@ -13,13 +13,25 @@ struct CublasLtType;
 
 template <>
 struct CublasLtType<float> {
+  using Scale = float;
   static constexpr cudaDataType_t data_type = CUDA_R_32F;
+  static constexpr cudaDataType_t scale_type = CUDA_R_32F;
   static constexpr cublasComputeType_t compute_type = CUBLAS_COMPUTE_32F;
 };
 
 template <>
+struct CublasLtType<double> {
+  using Scale = double;
+  static constexpr cudaDataType_t data_type = CUDA_R_64F;
+  static constexpr cudaDataType_t scale_type = CUDA_R_64F;
+  static constexpr cublasComputeType_t compute_type = CUBLAS_COMPUTE_64F;
+};
+
+template <>
 struct CublasLtType<cutlass::half_t> {
+  using Scale = float;
   static constexpr cudaDataType_t data_type = CUDA_R_16F;
+  static constexpr cudaDataType_t scale_type = CUDA_R_32F;
   static constexpr cublasComputeType_t compute_type = CUBLAS_COMPUTE_32F_FAST_16F;
 };
 
@@ -65,7 +77,7 @@ int run_cublaslt_gemm(KernelRunnerBuffers buffers, int m, int n, int k,
     return cublaslt_status_to_error(cublas_status);
   }
 
-  cublas_status = cublasLtMatmulDescCreate(&matmul_desc, Type::compute_type, CUDA_R_32F);
+  cublas_status = cublasLtMatmulDescCreate(&matmul_desc, Type::compute_type, Type::scale_type);
   if (cublas_status != CUBLAS_STATUS_SUCCESS) {
     cleanup();
     return cublaslt_status_to_error(cublas_status);
@@ -166,8 +178,9 @@ int run_cublaslt_gemm(KernelRunnerBuffers buffers, int m, int n, int k,
     return cublaslt_status_to_error(CUBLAS_STATUS_NOT_SUPPORTED);
   }
 
-  float alpha = 1.0f;
-  float beta = 0.0f;
+  using Scale = typename Type::Scale;
+  Scale alpha = Scale(1.0);
+  Scale beta = Scale(0.0);
   auto launch = [&]() {
     return cublasLtMatmul(handle, matmul_desc, &alpha, buffers.a, layout_a,
                           buffers.b, layout_b, &beta, buffers.c, layout_c,
@@ -249,4 +262,12 @@ extern "C" int run_cublaslt_f16(KernelRunnerBuffers buffers, int m, int n, int k
                                  int split_k_slices, float *avg_ms) {
   return run_cublaslt_gemm<cutlass::half_t>(buffers, m, n, k, warmup_iterations,
                                             iterations, streams, num_streams, split_k_slices, avg_ms);
+}
+
+extern "C" int run_cublaslt_f64(KernelRunnerBuffers buffers, int m, int n, int k,
+                                 int warmup_iterations, int iterations,
+                                 cudaStream_t *streams, int num_streams,
+                                 int split_k_slices, float *avg_ms) {
+  return run_cublaslt_gemm<double>(buffers, m, n, k, warmup_iterations,
+                                   iterations, streams, num_streams, split_k_slices, avg_ms);
 }

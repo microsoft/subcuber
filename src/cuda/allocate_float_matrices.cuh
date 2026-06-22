@@ -77,9 +77,9 @@ struct random_float {
 };
 
 /// Kernel to initialize a matrix with small integers.
-template<typename F>
+template<typename F, typename T>
 __global__ void InitializeMatrix_kernel(
-  float *matrix,
+  T *matrix,
   int rows,
   int columns,
   int seed = 0) {
@@ -94,15 +94,15 @@ __global__ void InitializeMatrix_kernel(
     int const k = 16807;
     int const m = 16;
     F f(seed);
-    float value = f(i,j);//float(((offset + seed) * k % m) - m / 2);
+    T value = T(f(i,j));//float(((offset + seed) * k % m) - m / 2);
 
     matrix[offset] = value;
   }
 }
 
 /// Simple function to initialize a matrix to arbitrary small integers.
-template<typename F>
-cudaError_t InitializeMatrix(float *matrix, int rows, int columns, int seed = 0) {
+template<typename F, typename T>
+cudaError_t InitializeMatrix(T *matrix, int rows, int columns, int seed = 0) {
 
   dim3 block(16, 16);
   dim3 grid(
@@ -115,8 +115,9 @@ cudaError_t InitializeMatrix(float *matrix, int rows, int columns, int seed = 0)
   return cudaGetLastError();
 }
 
+template<typename T>
 __global__ void InitializeMatrix_kernelB(
-  float *matrix,
+  T *matrix,
   int rows,
   int columns,
   int seed = 0) {
@@ -130,13 +131,14 @@ __global__ void InitializeMatrix_kernelB(
     // Generate arbitrary elements.
     int const k = 16807;
     int const m = 31;
-    float value = ::sum<511>()(i,j);//sum()(i,j); //(i == j)? 1 : 0; //float(((offset + seed) * k % m) - m / 2);
+    T value = ::sum<511>()(i,j);//sum()(i,j); //(i == j)? 1 : 0; //float(((offset + seed) * k % m) - m / 2);
 
     matrix[offset] = value;
   }
 }
 
-cudaError_t InitializeMatrixB(float *matrix, int rows, int columns, int seed = 0) {
+template<typename T>
+cudaError_t InitializeMatrixB(T *matrix, int rows, int columns, int seed = 0) {
 
   dim3 block(16, 16);
   dim3 grid(
@@ -144,17 +146,17 @@ cudaError_t InitializeMatrixB(float *matrix, int rows, int columns, int seed = 0
     (columns + block.y - 1) / block.y
   );
 
-  InitializeMatrix_kernelB<<< grid, block >>>(matrix, rows, columns, seed);
+  InitializeMatrix_kernelB<T><<< grid, block >>>(matrix, rows, columns, seed);
 
   return cudaDeviceSynchronize();
 }
 
 /// Allocates device memory for a matrix then fills with arbitrary small integers.
-template<typename F>
-cudaError_t AllocateMatrix(float **matrix, int rows, int columns, int seed = 0) {
+template<typename F, typename T>
+cudaError_t AllocateMatrix(T **matrix, int rows, int columns, int seed = 0) {
   cudaError_t result;
 
-  size_t sizeof_matrix = sizeof(float) * rows * columns;
+  size_t sizeof_matrix = sizeof(T) * rows * columns;
   printf("sizeof_matrix %ld\n", sizeof_matrix);
   // Allocate device memory.
   result = cudaMalloc(reinterpret_cast<void **>(matrix), sizeof_matrix);

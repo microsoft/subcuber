@@ -39,12 +39,16 @@ RUNNER_SRC := kernel_runner.cpp cublas_runner.cpp cublaslt_runner.cpp
 
 AMPERE_CUBIC_SRCS := \
 	kernels/ampere/cubic/ampere_f16_cutlass_128x256.cu \
+	kernels/ampere/cubic/ampere_f64_cutlass_64x64.cu \
+	kernels/ampere/cubic/ampere_f64_cutlass_128x128.cu \
 	kernels/ampere/cubic/ampere_f32_cutlass_128x128.cu \
 	kernels/ampere/cubic/ampere_f32_cutlass_256x128.cu
 
 HOPPER_CUBIC_SRCS := \
 	kernels/hopper/cubic/hopper_f16_cutlass_128x128_pingpong.cu \
 	kernels/hopper/cubic/hopper_f16_cutlass_128x256_cooperative.cu \
+	kernels/hopper/cubic/hopper_f64_cutlass_128x64.cu \
+	kernels/hopper/cubic/hopper_f64_cutlass_128x128.cu \
 	kernels/hopper/cubic/hopper_f32_cutlass_128x128.cu \
 	kernels/hopper/cubic/hopper_f32_cutlass_256x128.cu
 
@@ -56,6 +60,11 @@ AMPERE_V2_SRCS := kernels/ampere/strassen_winograd/ampere_f32_sw_interleaved_pre
 	kernels/ampere/strassen_winograd/ampere_f32_sw_interleaved_presum_128x128.cu \
 	kernels/ampere/strassen_winograd/ampere_f32_sw_interleaved_presum_level_2.cu \
 	kernels/ampere/strassen_winograd/ampere_f32_sw_interleaved_presum_level_2_128x128.cu \
+	kernels/ampere/strassen_winograd/ampere_f64_sw_interleaved_presum_64x64.cu \
+	kernels/ampere/strassen_winograd/ampere_f64_sw_interleaved_presum_128x128.cu \
+	kernels/ampere/strassen_winograd/ampere_f64_sw_interleaved_presum_level_2_64x64.cu \
+	kernels/ampere/strassen_winograd/ampere_f64_sw_interleaved_presum_level_2_128x128.cu \
+	kernels/ampere/strassen_winograd/ampere_f64_sw_fused_presum_128x128.cu \
 	kernels/ampere/strassen_winograd/ampere_f32_sw_tile_64x128.cu \
 	kernels/ampere/strassen_winograd/ampere_f32_sw_tile_128x128.cu \
 	kernels/ampere/strassen_winograd/ampere_f32_sw_kernel_presum.cu \
@@ -69,6 +78,11 @@ HOPPER_V2_SRCS := \
 	kernels/hopper/strassen_winograd/hopper_f32_sw_tile.cu \
 	kernels/hopper/strassen_winograd/hopper_f32_sw_interleaved_presum.cu \
 	kernels/hopper/strassen_winograd/hopper_f32_sw_interleaved_presum_level_2.cu \
+	kernels/hopper/strassen_winograd/hopper_f64_sw_interleaved_presum_128x64.cu \
+	kernels/hopper/strassen_winograd/hopper_f64_sw_interleaved_presum_128x128.cu \
+	kernels/hopper/strassen_winograd/hopper_f64_sw_interleaved_presum_level_2_128x64.cu \
+	kernels/hopper/strassen_winograd/hopper_f64_sw_interleaved_presum_level_2_128x128.cu \
+	kernels/hopper/strassen_winograd/hopper_f64_sw_fused_presum_128x128.cu \
 	kernels/hopper/strassen_winograd/hopper_f32_sw_kernel_presum.cu \
 	kernels/hopper/strassen_winograd/hopper_f32_sw_fused_presum.cu
 

@@ -1618,13 +1618,13 @@ public:
               PresumVecTypeA a3; a3.clear();
 
               if (presumAComputeLoads.hasAccess(MmaStrassen::APresums::A0))
-                PresumDetail::shared_load_128b(&a0, sharedPreSums.get(presumAComputeLoads.index(MmaStrassen::APresums::A0), presum_read_stage, 0));
+                a0 = PresumDetail::shared_load_128b<PresumVecTypeA>(sharedPreSums.get(presumAComputeLoads.index(MmaStrassen::APresums::A0), presum_read_stage, 0));
               if (presumAComputeLoads.hasAccess(MmaStrassen::APresums::A1))
-                PresumDetail::shared_load_128b(&a1, sharedPreSums.get(presumAComputeLoads.index(MmaStrassen::APresums::A1), presum_read_stage, 0));
+                a1 = PresumDetail::shared_load_128b<PresumVecTypeA>(sharedPreSums.get(presumAComputeLoads.index(MmaStrassen::APresums::A1), presum_read_stage, 0));
               if (presumAComputeLoads.hasAccess(MmaStrassen::APresums::A2))
-                PresumDetail::shared_load_128b(&a2, sharedPreSums.get(presumAComputeLoads.index(MmaStrassen::APresums::A2), presum_read_stage, 0));
+                a2 = PresumDetail::shared_load_128b<PresumVecTypeA>(sharedPreSums.get(presumAComputeLoads.index(MmaStrassen::APresums::A2), presum_read_stage, 0));
               if (presumAComputeLoads.hasAccess(MmaStrassen::APresums::A3))
-                PresumDetail::shared_load_128b(&a3, sharedPreSums.get(presumAComputeLoads.index(MmaStrassen::APresums::A3), presum_read_stage, 0));
+                a3 = PresumDetail::shared_load_128b<PresumVecTypeA>(sharedPreSums.get(presumAComputeLoads.index(MmaStrassen::APresums::A3), presum_read_stage, 0));
 
               PresumIOToComputeType presum_io_to_compute_type;
               PresumComputeToIOType presum_compute_to_io_type;
@@ -1678,13 +1678,14 @@ public:
               PresumVecTypeB b3; b3.clear();
 
               if (presumBComputeLoads.hasAccess(MmaStrassen::BPresums::B0))
-                PresumDetail::shared_load_128b(&b0, sharedPreSums.get(presumBComputeLoads.index(MmaStrassen::BPresums::B0), presum_read_stage, 0));
+                // PresumDetail::shared_load_128b(&b0, sharedPreSums.get(presumBComputeLoads.index(MmaStrassen::BPresums::B0), presum_read_stage, 0));
+                b0 = PresumDetail::shared_load_128b<PresumVecTypeB>(sharedPreSums.get(presumBComputeLoads.index(MmaStrassen::BPresums::B0), presum_read_stage, 0));
               if (presumBComputeLoads.hasAccess(MmaStrassen::BPresums::B1))
-                PresumDetail::shared_load_128b(&b1, sharedPreSums.get(presumBComputeLoads.index(MmaStrassen::BPresums::B1), presum_read_stage, 0));
+                b1 = PresumDetail::shared_load_128b<PresumVecTypeB>(sharedPreSums.get(presumBComputeLoads.index(MmaStrassen::BPresums::B1), presum_read_stage, 0));
               if (presumBComputeLoads.hasAccess(MmaStrassen::BPresums::B2))
-                PresumDetail::shared_load_128b(&b2, sharedPreSums.get(presumBComputeLoads.index(MmaStrassen::BPresums::B2), presum_read_stage, 0));
+                b2 = PresumDetail::shared_load_128b<PresumVecTypeB>(sharedPreSums.get(presumBComputeLoads.index(MmaStrassen::BPresums::B2), presum_read_stage, 0));
               if (presumBComputeLoads.hasAccess(MmaStrassen::BPresums::B3))
-                PresumDetail::shared_load_128b(&b3, sharedPreSums.get(presumBComputeLoads.index(MmaStrassen::BPresums::B3), presum_read_stage, 0));
+                b3 = PresumDetail::shared_load_128b<PresumVecTypeB>(sharedPreSums.get(presumBComputeLoads.index(MmaStrassen::BPresums::B3), presum_read_stage, 0));
 
               PresumIOToComputeType presum_io_to_compute_type;
               PresumComputeToIOType presum_compute_to_io_type;
@@ -1695,11 +1696,11 @@ public:
               auto s3b2 = s3 - presum_io_to_compute_type(b2);
 
               using AllPresums = typename StrassenMiGroup::AllPresums;
-              // if (StrassenMiGroup::hasM0() && StrassenMiGroup::Level == 2 &&
-              //     iter_PresumB_M.tb_offset.column() == 0 && iter_PresumB_M.col == 0 && iter_PresumB_M.tb_offset.row() + iter_PresumB_M.row == 512)
-              //     printf("1632 %p %d ; %d %d; %f %f %f %f\n", iter_PresumB_M.get(AllPresums::indexBPresum(MmaStrassen::BPresums::B31)),
-              //     iter_PresumB_M.tb_offset.row() + iter_PresumB_M.row, iter_PresumB_M.stride, iter_PresumB_M.VectorLoadElems,
-              //     float(b10[0]), float(b31[0]), float(s3[0]), float(s3b2[0]));
+                // if (StrassenMiGroup::hasM0() && StrassenMiGroup::Level == 2 &&
+                //     iter_PresumB_M.tb_offset.column() == 0 && iter_PresumB_M.col == 0 && iter_PresumB_M.tb_offset.row() + iter_PresumB_M.row == 512)
+                //     printf("1632 %p %d ; %d %d; %f %f %f %f\n", iter_PresumB_M.get(AllPresums::indexBPresum(MmaStrassen::BPresums::B31)),
+                //     iter_PresumB_M.tb_offset.row() + iter_PresumB_M.row, iter_PresumB_M.stride, iter_PresumB_M.VectorLoadElems,
+                //     float(b10[0]), float(b31[0]), float(s3[0]), float(s3b2[0]));
                   // printf("1632 %p\n", iter_PresumB_M.get(AllPresums::indexBPresum(MmaStrassen::BPresums::B31)));
               if (AllPresums::doesComputeB(MmaStrassen::BPresums::B10)) {
                 arch::global_store<PresumVecTypeB, sizeof(PresumVecTypeB)>(presum_compute_to_io_type(b10), iter_PresumB_M.get(AllPresums::indexBPresum(MmaStrassen::BPresums::B10)),

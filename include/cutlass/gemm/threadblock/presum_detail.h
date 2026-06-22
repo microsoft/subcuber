@@ -11,6 +11,25 @@ namespace threadblock {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace PresumDetail {
+template<class T>
+CUTLASS_DEVICE
+T shared_load_128b(void* ptr) {
+  uint64_t addr64 = 0;
+  float x, y, z, w;
+  asm volatile("cvta.to.shared.u64 %0, %1;": "=l"(addr64) : "l"(ptr));
+  asm volatile("ld.shared.v4.f32 {%0, %1, %2, %3}, [%4];\n"
+    : "=f"(x), "=f"(y), "=f"(z), "=f"(w)
+    : "l"(addr64));
+
+  T dst;
+  float4& packed = reinterpret_cast<float4&>(dst);
+  packed.x = x;
+  packed.y = y;
+  packed.z = z;
+  packed.w = w;
+  return dst;
+}
+
 // ld.shared - 128b
 CUTLASS_DEVICE
 void shared_load_128b(void *dst, void* ptr) {
