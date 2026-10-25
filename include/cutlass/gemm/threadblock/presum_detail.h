@@ -136,7 +136,7 @@ struct GlobalIterator {
 
     reset();
     //TODO: compare only columns for A and only rows for B
-    isValidTB = (!isAorB && tb_offset.column() < stride) || (isAorB && tb_offset.row() < extent.row());
+    isValidTB = tb_offset.row() < extent.row() && tb_offset.column() < extent.column();
   }
 
   CUTLASS_DEVICE

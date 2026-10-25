@@ -1,0 +1,111 @@
+--- include/cutlass/epilogue/collective/sm90_strassen_epilogue_tma_warpspecialized.hpp
++++ include/cutlass/epilogue/collective/sm90_strassen_epilogue_tma_warpspecialized.hpp
+@@ -1093,7 +1093,7 @@
+ 
+     //Multiple stage using TMA
+     constexpr uint STAGE_ELEMS = (size<0>(EpilogueTile{}) * size<1>(EpilogueTile{})) / NumMMAThreads;
+-    bool issue_tma_store = thread_idx == 0;
++    bool issue_tma_store = thread_idx == 0 && m_coord * size<0>(TileShapeMNK{}) < M/2 && n_coord * size<1>(TileShapeMNK{}) < N/2;
+     
+     const bool is_producer_load_needed = src_global_op.valid() && src_global_op.is_mem_global() && src_global_op.is_layout_interim_linear();
+ 
+@@ -1420,7 +1420,7 @@
+     auto synchronize = [&] () CUTLASS_LAMBDA_FUNC_INLINE { cutlass::arch::NamedBarrier::sync(size(TiledMma{}), cutlass::arch::ReservedNamedBarriers::EpilogueBarrier); };
+ 
+     // Predication for TMA store (one warp issues TMA store)
+-    bool issue_tma_store = (thread_idx / NumThreadsPerWarp) == 0;
++    bool issue_tma_store = (thread_idx / NumThreadsPerWarp) == 0 && m_coord * size<0>(TileShapeMNK{}) < M/2 && n_coord * size<1>(TileShapeMNK{}) < N/2;
+ 
+     // In the reuse smem configuration we have StagesC smem buffers and at most StagesD committed TMA stores in flight.
+     // The TMA store pipeline producer acquire returns when at most StagesD-1 committed stores are in-flight, so we can
+--- include/cutlass/gemm/collective/sm90_strassen_mma_tma_gmma_ss_warpspecialized.hpp
++++ include/cutlass/gemm/collective/sm90_strassen_mma_tma_gmma_ss_warpspecialized.hpp
+@@ -1201,7 +1201,7 @@
+       // main loop issues the next stage's A/B loads before waiting on epilogue.
+       if (ComputesPresum && store_order_barrier != nullptr && k_tile_count >= PresumStages - 2) {
+         CUTLASS_PRAGMA_UNROLL
+-        for (int prologue_iter = 0; prologue_iter < PresumStages - 2; ++prologue_iter) {
++        for (int prologue_iter = 0; prologue_iter < PresumStages - 2 && smem_pipe_write.index() < PresumStages - 2; ++prologue_iter) {
+           pipeline.producer_acquire(smem_pipe_write);
+           BarrierType* tma_barrier = pipeline.producer_get_barrier(smem_pipe_write);
+           int write_stage = smem_pipe_write.index();
+@@ -1262,7 +1262,7 @@
+             iter_PresumB_M.reset(presum_tile);
+             iter_PresumB_M.set_iteration(presum_write_iter);
+ 
+-            for (int wid = 0; wid < 4; wid++) {
++            for (int wid = 0; wid < 4 && iter_PresumB_M.tb_offset.row() + presum_tile*size<0>(TileShape{}) + presum_write_iter*size<0>(PresumTileShapeB{}) < halfK; wid++) {
+               auto smem_dst_ptr = shared_presum_tensors.smem_A0.data() +
+                                   write_stage* 4*PresumSingleStageSize +
+                                   wid * PresumSingleStageSize +
+@@ -1283,7 +1283,7 @@
+         copy(tma_load_a.with(*tma_barrier, mcast_mask_a), tAgA(_,_,_,*k_tile_iter), tAsA(_,_,_,write_stage));
+         copy(tma_load_b.with(*tma_barrier, mcast_mask_b), tBgB(_,_,_,*k_tile_iter + raw_sub_m_offset_b), tBsB(_,_,_,write_stage));
+ 
+-        if (ComputesPresum && store_order_barrier != nullptr && presum_k_iter == PresumStages - 2) {
++        if (ComputesPresum && store_order_barrier != nullptr && !store_order_barrier_advanced && write_stage >= PresumStages - 2) {
+           store_order_barrier->wait();
+           store_order_barrier->advance();
+           store_order_barrier_advanced = true;
+@@ -1574,6 +1574,11 @@
+           // asm volatile("wgmma.fence.sync.aligned;");
+           // __syncwarp();
+           // asm volatile("bar.sync %0, %1;" : : "r"(3), "r"(128));
++          // Tail copies redistribute vectors across both consumer warp groups.
++          // Complete their scalar presum stores before reading this shared stage.
++          if (last_presum_iters && NumMMAThreads == 256) {
++            asm volatile("bar.cta.sync %0, %1;" : : "r"(4), "r"(NumMMAThreads) : "memory");
++          }
+           PresumStoreVecType data[kPresumThreads/PresumStoreWarpSize];
+ 
+           //TODO: Following code is probably wrong but it works when PresumShapeTile's row is 2 and 4
+@@ -1666,6 +1671,11 @@
+           // __syncwarp();
+           // asm volatile("bar.sync %0, %1;" : : "r"(3), "r"(128));
+ 
++          // Tail copies redistribute vectors across both consumer warp groups.
++          // Complete their scalar presum stores before reading this shared stage.
++          if (last_presum_iters && NumMMAThreads == 256) {
++            asm volatile("bar.cta.sync %0, %1;" : : "r"(4), "r"(NumMMAThreads) : "memory");
++          }
+           PresumStoreVecType data[kPresumThreads/PresumStoreWarpSize];
+           if (kPresumThreads < NumMMAThreads) {
+             // data[0].fill(ElementA(0));
+@@ -1992,6 +2002,13 @@
+                               m_coord * (1 << mainloop_params.get_presum_tile_log_multiplier_b()), n_coord, iter_PresumB_M, shared_presum_tensors, presum_outputs, mainloop_params, e2);
+     }
+ 
++    // The epilogue aliases the last two presum stages. Both consumer warp
++    // groups must finish their tail reads before either can reuse that storage.
++    if (NumMMAThreads == 256 && require_presum_stores_in_last_iters &&
++        ((StrassenMiGroup::hasM0() && StrassenMiGroup::AllPresums::computeAnyAPresum()) ||
++         (StrassenMiGroup::hasM1() && StrassenMiGroup::AllPresums::computeAnyBPresum()))) {
++      asm volatile("bar.cta.sync %0, %1;" : : "r"(4), "r"(NumMMAThreads) : "memory");
++    }
+     warpgroup_fence_operand(accum);
+   }
+ 
+--- include/cutlass/gemm/threadblock/presum_detail.h
++++ include/cutlass/gemm/threadblock/presum_detail.h
+@@ -136,7 +136,7 @@
+ 
+     reset();
+     //TODO: compare only columns for A and only rows for B
+-    isValidTB = (!isAorB && tb_offset.column() < stride) || (isAorB && tb_offset.row() < extent.row());
++    isValidTB = tb_offset.row() < extent.row() && tb_offset.column() < extent.column();
+   }
+ 
+   CUTLASS_DEVICE
+--- src/cuda/kernels/hopper/strassen_winograd/hopper_f16_sw_interleaved_presum_cooperative_max_fusion.cuh
++++ src/cuda/kernels/hopper/strassen_winograd/hopper_f16_sw_interleaved_presum_cooperative_max_fusion.cuh
+@@ -78,8 +78,8 @@
+                                                                   AllPresumsM1To6>>;
+ 
+ using ScheduleStrassenGroups1 = ScheduleStrassenGroups<ParallelMiGroups<KernelSchedule, EpilogueSchedule, false, FusedMiGroup<7, 0>>,
+-                                                       ParallelMiGroups<KernelSchedule, EpilogueSchedule, false, FusedMiGroup<7, 2>,
+-                                                                                                                 FusedMiGroup<7, 4>>>;
++                                                       ParallelMiGroups<KernelSchedule, EpilogueSchedule, false, FusedMiGroup<7, 2>>,
++                                                       ParallelMiGroups<KernelSchedule, EpilogueSchedule, false, FusedMiGroup<7, 4>>>;
+ 
+ template<int StageCountTypeM0, typename PresumTileShapeA, typename PresumTileShapeB, typename PresumOpts = cutlass::gemm::device::PresumOpt<>>
+ using StrassenGemmKernels = cutlass::gemm::device::StrassenGemmKernels<StrassenGroups<StageCountTypeM0>,

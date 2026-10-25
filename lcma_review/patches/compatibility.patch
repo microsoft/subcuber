@@ -1,0 +1,20 @@
+--- a/src/cuda/kernels/hopper/strassen_winograd/hopper_f16_sw_interleaved_presum_pingpong_max_fusion.cuh
++++ b/src/cuda/kernels/hopper/strassen_winograd/hopper_f16_sw_interleaved_presum_pingpong_max_fusion.cuh
+@@ -113,6 +113,7 @@
+ using StrassenGemmKernels = cutlass::gemm::device::StrassenGemmKernels<StrassenGroups<StageCountTypeM0>,
+                                                                        ScheduleStrassenGroups1,
+                                                                        ProblemShape,
++                                                                       ArchTag, OperatorClass,
+                                                                        ElementA, LayoutA, cutlass::layout::OriginalLayout,
+                                                                        ElementB, LayoutB, cutlass::layout::OriginalLayout,
+                                                                        ElementC, LayoutC, cutlass::layout::OriginalLayout,
+--- a/src/cuda/kernels/hopper/strassen_winograd/hopper_f16_sw_interleaved_presum_cooperative_max_fusion.cuh
++++ b/src/cuda/kernels/hopper/strassen_winograd/hopper_f16_sw_interleaved_presum_cooperative_max_fusion.cuh
+@@ -85,6 +85,7 @@
+ using StrassenGemmKernels = cutlass::gemm::device::StrassenGemmKernels<StrassenGroups<StageCountTypeM0>,
+                                                                        ScheduleStrassenGroups1,
+                                                                        ProblemShape,
++                                                                       ArchTag, OperatorClass,
+                                                                        ElementA, LayoutA, cutlass::layout::OriginalLayout,
+                                                                        ElementB, LayoutB, cutlass::layout::OriginalLayout,
+                                                                        ElementC, LayoutC, cutlass::layout::OriginalLayout,

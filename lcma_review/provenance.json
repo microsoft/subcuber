@@ -1,0 +1,24 @@
+{
+  "subcuber_commit": "b0672e829c49db76512096dc43d97ab1b733e02b",
+  "cutlass_commit": "a49a78ffefc86a87160dfe0ccc3a3a2d1622c918",
+  "googletest_commit": "a721f1b20c605f635413e22d8b7427a8b4f3956c",
+  "tested_alias": "HopperF16InterleavedPresumCooperativeMaxFusion_4x256_4x256_OptNo",
+  "historical_environment": {
+    "python": "3.11.16",
+    "torch": "2.10.0+cu129",
+    "cuda_toolkit": "12.9.86",
+    "g++": "10.5.0",
+    "driver": "575.57.08",
+    "gpu": "H100"
+  },
+  "historical_release_so_sha256": {
+    "original": "b59608978a8b4719b39e566f0a9551abd74c51d35627cf39ad3cedc0d1215280",
+    "fixed": "85d03ef39d39f322a1807ee4437a25ddf717ad39b8f2e185bf96d48c6eb6f8af"
+  },
+  "note": "Historical GPU results; newly assembled full checkout has not been rebuilt or run on a GPU.",
+  "patch_sha256": {
+    "compatibility.patch": "ca99a070c3ea296427e4a47b8dd7f7ea8045c4cd4a42472dd8b951c16ea0c32e",
+    "lcma_full_fix.patch": "7f42a63c4c3edfe16c6ec5008240b82f9dfb21df35d0a1a6af1a1a837cb18738"
+  },
+  "cutlass_patch_sha256": "8c5d41bdecf89a5a719c169cb24ff01c47e375a10371bd66ca57881eacb0b378"
+}

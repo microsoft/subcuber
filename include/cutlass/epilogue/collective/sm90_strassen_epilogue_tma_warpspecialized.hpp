@@ -1093,7 +1093,7 @@ struct SM90_BULK_TMA_ADD_S2G
 
     //Multiple stage using TMA
     constexpr uint STAGE_ELEMS = (size<0>(EpilogueTile{}) * size<1>(EpilogueTile{})) / NumMMAThreads;
-    bool issue_tma_store = thread_idx == 0;
+    bool issue_tma_store = thread_idx == 0 && m_coord * size<0>(TileShapeMNK{}) < M/2 && n_coord * size<1>(TileShapeMNK{}) < N/2;
     
     const bool is_producer_load_needed = src_global_op.valid() && src_global_op.is_mem_global() && src_global_op.is_layout_interim_linear();
 
@@ -1420,7 +1420,7 @@ struct SM90_BULK_TMA_ADD_S2G
     auto synchronize = [&] () CUTLASS_LAMBDA_FUNC_INLINE { cutlass::arch::NamedBarrier::sync(size(TiledMma{}), cutlass::arch::ReservedNamedBarriers::EpilogueBarrier); };
 
     // Predication for TMA store (one warp issues TMA store)
-    bool issue_tma_store = (thread_idx / NumThreadsPerWarp) == 0;
+    bool issue_tma_store = (thread_idx / NumThreadsPerWarp) == 0 && m_coord * size<0>(TileShapeMNK{}) < M/2 && n_coord * size<1>(TileShapeMNK{}) < N/2;
 
     // In the reuse smem configuration we have StagesC smem buffers and at most StagesD committed TMA stores in flight.
     // The TMA store pipeline producer acquire returns when at most StagesD-1 committed stores are in-flight, so we can

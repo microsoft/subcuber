@@ -1201,7 +1201,7 @@ struct CollectiveStrassenMma<
       // main loop issues the next stage's A/B loads before waiting on epilogue.
       if (ComputesPresum && store_order_barrier != nullptr && k_tile_count >= PresumStages - 2) {
         CUTLASS_PRAGMA_UNROLL
-        for (int prologue_iter = 0; prologue_iter < PresumStages - 2; ++prologue_iter) {
+        for (int prologue_iter = 0; prologue_iter < PresumStages - 2 && smem_pipe_write.index() < PresumStages - 2; ++prologue_iter) {
           pipeline.producer_acquire(smem_pipe_write);
           BarrierType* tma_barrier = pipeline.producer_get_barrier(smem_pipe_write);
           int write_stage = smem_pipe_write.index();
@@ -1262,7 +1262,7 @@ struct CollectiveStrassenMma<
             iter_PresumB_M.reset(presum_tile);
             iter_PresumB_M.set_iteration(presum_write_iter);
 
-            for (int wid = 0; wid < 4; wid++) {
+            for (int wid = 0; wid < 4 && iter_PresumB_M.tb_offset.row() + presum_tile*size<0>(TileShape{}) + presum_write_iter*size<0>(PresumTileShapeB{}) < halfK; wid++) {
               auto smem_dst_ptr = shared_presum_tensors.smem_A0.data() +
                                   write_stage* 4*PresumSingleStageSize +
                                   wid * PresumSingleStageSize +
@@ -1283,7 +1283,7 @@ struct CollectiveStrassenMma<
         copy(tma_load_a.with(*tma_barrier, mcast_mask_a), tAgA(_,_,_,*k_tile_iter), tAsA(_,_,_,write_stage));
         copy(tma_load_b.with(*tma_barrier, mcast_mask_b), tBgB(_,_,_,*k_tile_iter + raw_sub_m_offset_b), tBsB(_,_,_,write_stage));
 
-        if (ComputesPresum && store_order_barrier != nullptr && presum_k_iter == PresumStages - 2) {
+        if (ComputesPresum && store_order_barrier != nullptr && !store_order_barrier_advanced && write_stage >= PresumStages - 2) {
           store_order_barrier->wait();
           store_order_barrier->advance();
           store_order_barrier_advanced = true;
@@ -1574,6 +1574,11 @@ struct CollectiveStrassenMma<
           // asm volatile("wgmma.fence.sync.aligned;");
           // __syncwarp();
           // asm volatile("bar.sync %0, %1;" : : "r"(3), "r"(128));
+          // Tail copies redistribute vectors across both consumer warp groups.
+          // Complete their scalar presum stores before reading this shared stage.
+          if (last_presum_iters && NumMMAThreads == 256) {
+            asm volatile("bar.cta.sync %0, %1;" : : "r"(4), "r"(NumMMAThreads) : "memory");
+          }
           PresumStoreVecType data[kPresumThreads/PresumStoreWarpSize];
 
           //TODO: Following code is probably wrong but it works when PresumShapeTile's row is 2 and 4
@@ -1666,6 +1671,11 @@ struct CollectiveStrassenMma<
           // __syncwarp();
           // asm volatile("bar.sync %0, %1;" : : "r"(3), "r"(128));
 
+          // Tail copies redistribute vectors across both consumer warp groups.
+          // Complete their scalar presum stores before reading this shared stage.
+          if (last_presum_iters && NumMMAThreads == 256) {
+            asm volatile("bar.cta.sync %0, %1;" : : "r"(4), "r"(NumMMAThreads) : "memory");
+          }
           PresumStoreVecType data[kPresumThreads/PresumStoreWarpSize];
           if (kPresumThreads < NumMMAThreads) {
             // data[0].fill(ElementA(0));
@@ -1992,6 +2002,13 @@ struct CollectiveStrassenMma<
                               m_coord * (1 << mainloop_params.get_presum_tile_log_multiplier_b()), n_coord, iter_PresumB_M, shared_presum_tensors, presum_outputs, mainloop_params, e2);
     }
 
+    // The epilogue aliases the last two presum stages. Both consumer warp
+    // groups must finish their tail reads before either can reuse that storage.
+    if (NumMMAThreads == 256 && require_presum_stores_in_last_iters &&
+        ((StrassenMiGroup::hasM0() && StrassenMiGroup::AllPresums::computeAnyAPresum()) ||
+         (StrassenMiGroup::hasM1() && StrassenMiGroup::AllPresums::computeAnyBPresum()))) {
+      asm volatile("bar.cta.sync %0, %1;" : : "r"(4), "r"(NumMMAThreads) : "memory");
+    }
     warpgroup_fence_operand(accum);
   }
 
